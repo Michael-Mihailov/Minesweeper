@@ -1,0 +1,207 @@
+<html>
+    <body oncontextmenu="return false" style="background-color: lightblue; display: flex; flex-direction: column; align-items: center;">
+        <script>
+            let width = 10;
+            let height = 10;
+
+            let numMines = 20;
+
+            let tilesLeft = 0;
+
+            let mineArr = [];
+            let flagArr = [];
+            let visibleArr = [];
+            
+            function setupGame(e)
+            {
+                width = e.target[0].value;
+                height = e.target[1].value;
+                numMines = e.target[2].value;
+
+                tilesLeft = (width * height) - numMines;
+
+                if (tilesLeft <= 0 || width <= 0 || height <= 0)
+                {
+                    document.getElementById("gameBox").innerHTML = "<tr><td  style='width:200px; height: 100px; display: flex; justify-content: center; align-items: center''><h2><b>ERROR</b></h2></td></tr>";
+                }
+
+                for (let y = 0; y < height; y++)
+                {
+                    mineArr[y] = [];
+                    flagArr[y] = [];
+                    visibleArr[y] = [];
+
+                    for (let x = 0; x < width; x++)
+                    {
+                        mineArr[y][x] = false;
+                        flagArr[y][x] = false;
+                        visibleArr[y][x] = false;
+                    }
+                }
+
+                let minesLeft = numMines;
+                while (minesLeft > 0)
+                {
+                    let x = Math.floor(Math.random() * width);
+                    let y = Math.floor(Math.random() * height);
+                    if (mineArr[y][x] === false)
+                    {
+                        mineArr[y][x] = true;
+                        minesLeft--;
+                    }
+                }
+
+                displayGame();
+            }
+
+            function displayGame()
+            {
+                let ans = "";
+                for (let y = 0; y < height; y++)
+                {
+                    ans += "<tr>";
+                    for (let x = 0; x < width; x++)
+                    {
+                        if (flagArr[y][x] === true) // add flag image
+                        {
+                            ans += "<td oncontextmenu=\'switchFlag(" + x + "," + y + ")\'; style='text-align: center; background-color: " + (x % 2 === y % 2 ? "#5fbd5c" : "#699c4c") + "; min-width: 25px; min-height: 25px;'><img src='flag.png' style='width: 25px; height: 25px;'></td>";
+                        }
+                        else if (visibleArr[y][x] === false)
+                        {
+                            ans += "<td oncontextmenu=\'switchFlag(" + x + "," + y + ")\'; onclick=\'exploreTile(" + x + "," + y + ")\'; style='color: white; text-align: center; background-color: " + (x % 2 === y % 2 ? "#5fbd5c" : "#699c4c") + "; min-width: 25px; min-height: 25px; line-height: 25px;'><p> </p></td>";
+                        }
+                        else
+                        {
+                            ans += "<td style='text-align: center; color: white; background-color: " + (x % 2 === y % 2 ? "#bd895c" : "#9c714c") + "; min-width: 25px; min-height: 25px; line-height: 25px;'><b>" + (countMines(x, y) === 0 ? " " : countMines(x, y)) + "</b></td>";
+                        }
+                    }
+                    ans += "</tr>"
+                }
+                document.getElementById("gameBox").innerHTML = ans;
+            }
+
+            function switchFlag(x, y)
+            {
+                flagArr[y][x] = !flagArr[y][x];
+                displayGame();
+            }
+
+            function exploreTile(x, y)
+            {
+                if (x < 0 || x >= width || y < 0 || y >= height || visibleArr[y][x]) return;
+
+                if (mineArr[y][x] === true)
+                {
+                    document.getElementById("gameBox").innerHTML = "<tr><td  style='width:200px; height: 100px; display: flex; justify-content: center; align-items: center''><h2><b>YOU LOSE!!!</b></h2></td></tr>";
+                }
+                else
+                {
+                    visibleArr[y][x] = true;
+                    if (countMines(x, y) === 0)
+                    {
+                        for (let i = -1; i <= 1; i++)
+                        {
+                            for (let j = -1; j <= 1; j++)
+                            {
+                               exploreTile(x + i, y + j); 
+                            }
+                        }
+                    }
+
+                    tilesLeft--;
+                    if (tilesLeft === 0) 
+                    {
+                        document.getElementById("gameBox").innerHTML = "<tr><td  style='width:200px; height: 100px; display: flex; justify-content: center; align-items: center''><h2><b>You Win!</b></h2></td></tr>";
+                    }
+                    else
+                    {
+                        displayGame();
+                    }
+                }
+            }
+
+            function countMines(x, y)
+            {
+                let ans = 0;
+                if (x != width - 1 && mineArr[y][x + 1])
+                {
+                    ans++;
+                }
+                if (x != width - 1 && y != height - 1 && mineArr[y + 1][x + 1])
+                {
+                    ans++;
+                }
+                if (y != height - 1 && mineArr[y + 1][x])
+                {
+                    ans++;
+                }
+                if (x != 0 && y != height - 1 && mineArr[y + 1][x - 1])
+                {
+                    ans++;
+                }
+                if (x != 0 && mineArr[y][x - 1])
+                {
+                    ans++;
+                }
+                if (x != 0 && y != 0 && mineArr[y - 1][x - 1])
+                {
+                    ans++;
+                }
+                if (y != 0 && mineArr[y - 1][x])
+                {
+                    ans++;
+                }
+                if (x != width - 1 && y != 0 && mineArr[y - 1][x + 1])
+                {
+                    ans++;
+                }
+                return ans;
+            }
+        </script>
+
+        <div style="height: 10%; display: flex; justify-content: center; align-items: center;">
+            <h1 style="color: red;">Michael's Minesweeper Game</h1>
+        </div>
+        <hr style="width: 80%;">
+
+        <div style="width: 50%; height: 50%; display: flex; justify-content: center; align-items: center;">
+            <div style="overflow: auto; max-width: 100%; max-height: 100%;">
+                <table id="gameBox" style="border-collapse: collapse; border: 5px solid; background-color: white;">
+                
+                </table>
+            </div>
+        </div>
+        <hr style="width: 80%;">
+        
+        <div style="width: 100%; display: flex; flex-direction: row;">
+            <div style="width: 50%; height: 90%; padding: 5%;">
+                <ul>
+                    <li>This Minesweeper game was created for the "My Web Page" project in Cybersecurity</li>
+                    <li><a target="_blank" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">NCHS website link</a></li>
+                    <br>
+                    <li>Fill in the form on the right to start a game</li>
+                    <li>Left Click to explore a tile</li>
+                    <li>Right Click to place a flag</li>
+                </ul>
+                <a href="https://github.com/Michael-Mihailov" target="_blank" alt="My github account"><img src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" style="height: 50px; width: 50px;"></a>
+                <p>^^^ Github Link</p>
+            </div>
+            <div style="width: 50%; height: 90%; display: flex; justify-content: center; align-items: center;">
+                <div style="box-sizing: border-box; height: 75%; width: 70%; border-radius: 10px; padding: 3%; background-color: aquamarine;">
+                    <form onsubmit="setupGame(event); return false;">
+                        <label for="width">game width:</label>
+                        <input name="width" type="number" required/>
+                        <br>
+                        <label for="height">game height:</label>
+                        <input name="height" type="number" required/>
+                        <br>
+                        <label for="numMines">Number of Mines:</label>
+                        <input name="numMines" type="number" required/>
+                        <br>
+                        <input type="submit" value="Start Game" required/>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
